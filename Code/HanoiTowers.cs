@@ -5,15 +5,14 @@ namespace HanoiTowers
 {
     class HanoiTowers
     {
-        int Degree { get; }
-        //List<ConsoleColor> ColorScheme { get; }
-        int MinimumMoves { get; }
-        int CurrentMove { get; set; } = 0;
-        bool IsSolved { get; set; } = false;
-        int SelectedCollumn { get; set; } = 0;
-        int? MovingCollumn { get; set; } = null;
-        Stack<int>[] Columns { get; }
-        Stack<int> SolvedColumn { get; }
+        public int Degree { get; }
+        //private List<ConsoleColor> ColorScheme { get; }
+        public int MinimumMoves { get; }
+        public int CurrentMove { get; set; } = 0;
+        private int SelectedCollumn { get; set; } = 0;
+        private int? MovingCollumn { get; set; } = null;
+        private Stack<int>[] Columns { get; }
+        private Stack<int> SolvedColumn { get; }
 
         public HanoiTowers(int degree/*, List<ConsoleColor> colorScheme*/)
         {
@@ -26,10 +25,9 @@ namespace HanoiTowers
             for (int i = 0; i < degree; i++)
             {
                 this.SolvedColumn.Push(this.Degree - i);
-                nullStack.Push(0);
             }
 
-            this.Columns = new Stack<int>[3] {this.SolvedColumn, nullStack, nullStack};
+            this.Columns = new Stack<int>[3] {this.SolvedColumn, new Stack<int>(degree), new Stack<int>(degree)};
         }
 
         private void DisplayBlock(int blockSize)
@@ -96,6 +94,7 @@ namespace HanoiTowers
 
         private void DisplayRow(int rowNumber)
         {
+            int rowsFromBot = this.Degree - rowNumber;
             // Writing leftmost padding.
             Console.ForegroundColor = ConsoleColor.Black;
             for (int j = 0; j < 3; j++)
@@ -105,7 +104,14 @@ namespace HanoiTowers
 
 
             // Displaying collumn 1.
-            DisplayBlock(this.Columns[0].ElementAt(rowNumber));
+            if(rowsFromBot <= this.Columns[0].Count)
+            {
+                DisplayBlock(this.Columns[0].ElementAt(this.Columns[0].Count - rowsFromBot));
+            }
+            else
+            {
+                DisplayBlock(0);
+            }
 
 
             // Writing center-left padding.
@@ -117,7 +123,14 @@ namespace HanoiTowers
 
 
             // Displaying the second collumn.
-            DisplayBlock(this.Columns[1].ElementAt(rowNumber));
+            if(rowsFromBot <= this.Columns[1].Count)
+            {
+                DisplayBlock(this.Columns[1].ElementAt(this.Columns[1].Count - rowsFromBot));
+            }
+            else
+            {
+                DisplayBlock(0);
+            }
 
 
             // Writing center-right padding.
@@ -129,7 +142,14 @@ namespace HanoiTowers
 
 
             // Displaying the last collumn.
-            DisplayBlock(this.Columns[2].ElementAt(rowNumber));
+            if(rowsFromBot <= this.Columns[2].Count)
+            {
+                DisplayBlock(this.Columns[2].ElementAt(this.Columns[2].Count - rowsFromBot));
+            }
+            else
+            {
+                DisplayBlock(0);
+            }
         }
 
         private void DisplayTowers()
@@ -269,13 +289,69 @@ namespace HanoiTowers
         private bool IsValidMove(int[] move)
         {
             int movingBlock = this.Columns[move[0]].Peek();
-            int targetBlock = this.Columns[move[1]].Peek();
+            int targetBlock;
+            if(this.Columns[move[1]].Count < 1)
+            {
+                targetBlock = 0;
+            }
+            else
+            {
+                targetBlock = this.Columns[move[1]].Peek();
+            }
+            
 
             if (movingBlock < targetBlock || targetBlock == 0)
             {
                 return true;
             }
             return false;
+        }
+
+        public bool IsSolved()
+        {
+            return this.Columns[2].Count == this.Degree;
+        }
+
+        private void Move(int[] move)
+        {
+            int movingBlock = this.Columns[move[0]].Pop();
+            this.Columns[move[1]].Push(movingBlock);
+        }
+
+        public void Run()
+        {
+            while(!IsSolved())
+            {
+                Move(Display());
+                this.CurrentMove ++;
+                Console.ForegroundColor = ConsoleColor.White;
+                /*
+                Console.WriteLine();
+                Console.WriteLine(this.Columns[2]);
+                Console.WriteLine(this.SolvedColumn);
+                Console.ReadKey();
+                */
+            }
+
+            // Displaying the towers for the last time.
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(this.CurrentMove + "/" + this.MinimumMoves);
+            Console.WriteLine();
+            DisplayTowers();
+            Thread.Sleep(1500);
+
+            // Creating win message.
+            string winMessage = string.Format("Congrats, you completed the puzzle in {0} moves!", this.CurrentMove);
+            string movesAboveMin = string.Format("That's {0} moves above the minimum.", this.CurrentMove - this.MinimumMoves);
+
+            // Writing win message.
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Clear();
+            Console.WriteLine("\n\n");
+            Console.WriteLine(String.Format("{0," + ((Console.WindowWidth / 2) + (winMessage.Length / 2)) + "}", winMessage));
+            Console.WriteLine(String.Format("{0," + ((Console.WindowWidth / 2) + (movesAboveMin.Length / 2)) + "}", movesAboveMin));
+            Console.ReadKey();
         }
     }
 }
