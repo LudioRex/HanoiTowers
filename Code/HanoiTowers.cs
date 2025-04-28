@@ -8,7 +8,6 @@ namespace HanoiTowers
     class HanoiTowers
     {
         public int Degree { get; }
-        //private List<ConsoleColor> ColorScheme { get; }
         public int MinimumMoves { get; }
         public int CurrentMove { get; set; } = 0;
         private int SelectedCollumn { get; set; } = 0;
@@ -16,10 +15,14 @@ namespace HanoiTowers
         private Stack<int>[] Columns { get; }
         private Stack<int> SolvedColumn { get; }
 
-        public HanoiTowers(int degree/*, List<ConsoleColor> colorScheme*/)
+
+        /// <summary>
+        /// Initializes a new instance of the HanoiTowers class with the specified number of blocks.
+        /// </summary>
+        /// <param name="degree">Number of blocks in the tower.</param>
+        public HanoiTowers(int degree)
         {
             this.Degree = degree;
-            //this.ColorScheme = colorScheme;
             this.MinimumMoves = Convert.ToInt32(Math.Pow(2, degree)) - 1;
             this.SolvedColumn = new Stack<int>();
             Stack<int> nullStack = new();
@@ -32,6 +35,13 @@ namespace HanoiTowers
             this.Columns = new Stack<int>[3] {this.SolvedColumn, new Stack<int>(degree), new Stack<int>(degree)};
         }
 
+        //--------------------------Game display--------------------------\\
+
+
+        /// <summary>
+        /// Displays a block of the tower and its left and right padding.
+        /// </summary>
+        /// <param name="blockSize">Determines the size of the block.</param>
         private void DisplayBlock(int blockSize)
         {
             // Writing left padding.
@@ -56,6 +66,11 @@ namespace HanoiTowers
             }
         }
 
+
+        /// <summary>
+        /// Displays the first rows of the towers without any blocks.
+        /// This is used so that the user can more easily see the position of the towers.
+        /// </summary>
         private void DisplayUpperPadding()
         {
             // Looping once for each row.
@@ -94,6 +109,11 @@ namespace HanoiTowers
             } 
         }
 
+
+        /// <summary>
+        /// Displays a row of the towers.
+        /// </summary>
+        /// <param name="rowNumber">Determines which row is displayed.</param>
         private void DisplayRow(int rowNumber)
         {
             int rowsFromBot = this.Degree - rowNumber;
@@ -154,6 +174,11 @@ namespace HanoiTowers
             }
         }
 
+
+
+        /// <summary>
+        /// Displays the towers and their blocks.
+        /// </summary>
         private void DisplayTowers()
         {
             
@@ -168,6 +193,10 @@ namespace HanoiTowers
             }
         }
 
+
+        /// <summary>
+        /// Displays the towers and their numbers so the user can select a move to perform.
+        /// </summary>
         private void DisplayColumnMenu()
         {
             for (int i = 0; i < 3; i++)
@@ -220,6 +249,11 @@ namespace HanoiTowers
             }
         }
 
+
+        /// <summary>
+        /// Runs the menu where the user selects a move to perform. This is the main display method of the game.
+        /// </summary>
+        /// <returns>An integer array that describes the move selected by the user.</returns>
         public int[] Display()
         {
             this.MovingCollumn = null;
@@ -286,13 +320,20 @@ namespace HanoiTowers
             }
         }
 
-        //Game logic
+        //--------------------------Game logic--------------------------\\
 
+
+        /// <summary>
+        /// Determines if the move selected by the user is legal.
+        /// </summary>
+        /// <param name="move">Array describing the move selected by the user.</param>
+        /// <returns>Boolean describing wether the move is legal.</returns>
         private bool IsValidMove(int[] move)
         {
             int movingBlock = this.Columns[move[0]].Peek();
             int targetBlock;
-            if(this.Columns[move[1]].Count < 1)
+
+            if(this.Columns[move[1]].Count < 1) // Avoiding Stack.Empty return.
             {
                 targetBlock = 0;
             }
@@ -301,7 +342,7 @@ namespace HanoiTowers
                 targetBlock = this.Columns[move[1]].Peek();
             }
             
-
+            // Checking if the move is legal.
             if (movingBlock < targetBlock || targetBlock == 0)
             {
                 return true;
@@ -309,17 +350,31 @@ namespace HanoiTowers
             return false;
         }
 
+
+        /// <summary>
+        /// Checks if the towers are solved in their current arrangement.
+        /// </summary>
+        /// <returns>Boolean describing wether the game is solved.</returns>
         public bool IsSolved()
         {
             return this.Columns[2].Count == this.Degree;
         }
 
+
+        /// <summary>
+        /// Performs the move selceted by the user.
+        /// </summary>
+        /// <param name="move">Array describing the move.</param>
         private void Move(int[] move)
         {
             int movingBlock = this.Columns[move[0]].Pop();
             this.Columns[move[1]].Push(movingBlock);
         }
 
+
+        /// <summary>
+        /// Runs the game for a user until it is solved.
+        /// </summary>
         public void Run()
         {
             while(!IsSolved())
@@ -350,6 +405,14 @@ namespace HanoiTowers
             Console.ReadKey();
         }
 
+
+        /// <summary>
+        /// Finds a solution to the given arrangement of towers.
+        /// </summary>
+        /// <param name="degree">The number of blocks in the tower.</param>
+        /// <param name="initialColumn">The collumn on which the blocks are stacked.</param>
+        /// <param name="targetColumn">The collumn to which they should be moved.</param>
+        /// <returns>List of moves to be performed in order to solve the towers.</returns>
         private List<int[]> SolveHanoi(int degree, int initialColumn, int targetColumn)
         {
             List<int[]> solution = new();
@@ -381,10 +444,16 @@ namespace HanoiTowers
             return solution;
         }
 
+
+        /// <summary>
+        /// Runs and displays the shortest solution to the towers.
+        /// </summary>
+        /// <param name="moveDelay">Time in miliseconds to wait between the displaying of each move.</param>
         public void SolveSelf(int moveDelay = 1000)
         {
             List<int[]> solution = SolveHanoi(this.Degree, 0, 2);
 
+            // Looping through the moves in the solution.
             foreach (int[] move in solution)
             {
                 Console.Clear();
@@ -393,10 +462,12 @@ namespace HanoiTowers
                 Thread.Sleep(moveDelay);              
             }
 
+            // Displaying the towers for the last time.
             Console.Clear();
             DisplayTowers();
             Thread.Sleep(2000);
 
+            // Displaying a final message.
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.White;
             string finalMessage = "Towers were solved in " + this.MinimumMoves + " moves";
