@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq.Expressions;
 
 namespace HanoiTowers
 {
@@ -325,12 +327,6 @@ namespace HanoiTowers
                 Move(Display());
                 this.CurrentMove ++;
                 Console.ForegroundColor = ConsoleColor.White;
-                /*
-                Console.WriteLine();
-                Console.WriteLine(this.Columns[2]);
-                Console.WriteLine(this.SolvedColumn);
-                Console.ReadKey();
-                */
             }
 
             // Displaying the towers for the last time.
@@ -352,6 +348,59 @@ namespace HanoiTowers
             Console.WriteLine(String.Format("{0," + ((Console.WindowWidth / 2) + (winMessage.Length / 2)) + "}", winMessage));
             Console.WriteLine(String.Format("{0," + ((Console.WindowWidth / 2) + (movesAboveMin.Length / 2)) + "}", movesAboveMin));
             Console.ReadKey();
+        }
+
+        private List<int[]> SolveHanoi(int degree, int initialColumn, int targetColumn)
+        {
+            List<int[]> solution = new();
+            int openColumn = 0;
+
+            // Handling degree 1.
+            if(degree == 1)
+            {
+                solution.Add(new int[] {initialColumn, targetColumn});
+                return solution;
+            }
+
+            
+            // Finding the open column.
+            for (int i = 0; i < 3; i++)
+            {
+                if(i != initialColumn && i != targetColumn)
+                {
+                    openColumn = i;
+                    break;
+                }
+            }
+
+            // Handling high degree.
+            solution.AddRange(SolveHanoi(degree - 1, initialColumn, openColumn));
+            solution.Add(new int[] {initialColumn, targetColumn});
+            solution.AddRange(SolveHanoi(degree - 1, openColumn, targetColumn));
+
+            return solution;
+        }
+
+        public void SolveSelf(int moveDelay = 1000)
+        {
+            List<int[]> solution = SolveHanoi(this.Degree, 0, 2);
+
+            foreach (int[] move in solution)
+            {
+                Console.Clear();
+                DisplayTowers();
+                Move(move);
+                Thread.Sleep(moveDelay);              
+            }
+
+            Console.Clear();
+            DisplayTowers();
+            Thread.Sleep(2000);
+
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.White;
+            string finalMessage = "Towers were solved in " + this.MinimumMoves + " moves";
+            Console.WriteLine(String.Format("{0," + ((Console.WindowWidth / 2) + (finalMessage.Length / 2)) + "}", finalMessage));
         }
     }
 }
